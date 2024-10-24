@@ -74,11 +74,17 @@
     <div class="container">
         <h1>Оценка неблагоприятных погодных условий</h1>
         <form action="/" method="post">
-            <label for="latitude">Широта:</label>
-            <input type="text" id="latitude" name="latitude" placeholder="Введите широту" required>
+            <label for="start_latitude">Начальная широта:</label>
+            <input type="text" id="start_latitude" name="start_latitude" placeholder="Введите начальную широту" required>
 
-            <label for="longitude">Долгота:</label>
-            <input type="text" id="longitude" name="longitude" placeholder="Введите долготу" required>
+            <label for="start_longitude">Начальная долгота:</label>
+            <input type="text" id="start_longitude" name="start_longitude" placeholder="Введите начальную долготу" required>
+
+            <label for="end_latitude">Конечная широта:</label>
+            <input type="text" id="end_latitude" name="end_latitude" placeholder="Введите конечную широту" required>
+
+            <label for="end_longitude">Конечная долгота:</label>
+            <input type="text" id="end_longitude" name="end_longitude" placeholder="Введите конечную долготу" required>
 
             <input type="submit" value="Проверить погоду">
         </form>
