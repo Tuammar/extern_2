@@ -15,6 +15,7 @@
             align-items: center;
             height: 100vh;
         }
+
         .container {
             background-color: white;
             padding: 20px;
@@ -24,16 +25,19 @@
             max-width: 400px;
             text-align: center;
         }
+
         h1 {
             font-size: 24px;
             color: #333;
         }
+
         label {
             display: block;
             margin: 15px 0 5px;
             font-weight: bold;
             color: #555;
         }
+
         input[type="text"] {
             width: calc(100% - 20px);
             padding: 10px;
@@ -42,7 +46,8 @@
             border-radius: 5px;
             font-size: 16px;
         }
-        input[type="submit"] {
+
+        input[type="submit"], .btn {
             background-color: #4CAF50;
             color: white;
             padding: 10px 20px;
@@ -51,50 +56,68 @@
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.3s ease;
+            margin-top: 10px;
         }
-        input[type="submit"]:hover {
+
+        input[type="submit"]:hover, .btn:hover {
             background-color: #45a049;
         }
+
         .result {
             margin-top: 20px;
             font-size: 18px;
             color: #333;
         }
+
         .result h2 {
             font-size: 20px;
             color: #333;
         }
+
         .result p {
             font-size: 16px;
             color: #555;
         }
     </style>
+    <script>
+        function openDashPage(event) {
+            window.open(`/dash`, '_blank');
+        }
+
+        function showGraphButton() {
+            const graphButton = document.getElementById("graph-button");
+            graphButton.style.display = "inline-block"; // Показываем кнопку "Смотреть графики"
+        }
+    </script>
 </head>
 <body>
-    <div class="container">
-        <h1>Оценка неблагоприятных погодных условий</h1>
-        <form action="/" method="post">
-            <label for="start_latitude">Начальная широта:</label>
-            <input type="text" id="start_latitude" name="start_latitude" placeholder="Введите начальную широту" required>
+<div class="container">
+    <h1>Оценка неблагоприятных погодных условий</h1>
+    <form action="/" method="post" onsubmit="showGraphButton()">
+        <label for="start_latitude">Начальная широта:</label>
+        <input type="text" id="start_latitude" name="start_latitude" placeholder="Введите начальную широту" required>
 
-            <label for="start_longitude">Начальная долгота:</label>
-            <input type="text" id="start_longitude" name="start_longitude" placeholder="Введите начальную долготу" required>
+        <label for="start_longitude">Начальная долгота:</label>
+        <input type="text" id="start_longitude" name="start_longitude" placeholder="Введите начальную долготу" required>
 
-            <label for="end_latitude">Конечная широта:</label>
-            <input type="text" id="end_latitude" name="end_latitude" placeholder="Введите конечную широту" required>
+        <label for="end_latitude">Конечная широта:</label>
+        <input type="text" id="end_latitude" name="end_latitude" placeholder="Введите конечную широту" required>
 
-            <label for="end_longitude">Конечная долгота:</label>
-            <input type="text" id="end_longitude" name="end_longitude" placeholder="Введите конечную долготу" required>
+        <label for="end_longitude">Конечная долгота:</label>
+        <input type="text" id="end_longitude" name="end_longitude" placeholder="Введите конечную долготу" required>
 
-            <input type="submit" value="Проверить погоду">
-        </form>
+        <input type="submit" value="Проверить погоду">
+    </form>
 
-        {% if result %}
+    {% if result %}
         <div class="result">
             <h2>Результат:</h2>
             <p>{{ result }}</p>
+
+            <!-- Кнопка "Смотреть графики", отображается только если есть результат -->
+            <button id="graph-button" class="btn" onclick="openDashPage()">Смотреть графики</button>
         </div>
-        {% endif %}
-    </div>
+    {% endif %}
+</div>
 </body>
 </html>

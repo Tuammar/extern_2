@@ -2,6 +2,8 @@ from fastapi import APIRouter, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from app.core.weather import get_location_key, get_current_weather, check_bad_weather
+from app.routers.dash_app import init_dash_app
+from app import app
 
 """Здесь лежит рутер для задания 3. Пользователь вводит координаты начальной и конечной точки маршрута и получает ответ"""
 
@@ -17,18 +19,18 @@ async def index(request: Request):
 
 @form_router.post("/", response_class=HTMLResponse)
 async def submit_weather(
-    request: Request,
-    start_latitude: str = Form(...),
-    start_longitude: str = Form(...),
-    end_latitude: str = Form(...),
-    end_longitude: str = Form(...),
+        request: Request,
+        start_latitude: str = Form(...),
+        start_longitude: str = Form(...),
+        end_latitude: str = Form(...),
+        end_longitude: str = Form(...),
 ):
     try:
         if (
-            not start_latitude
-            or not start_longitude
-            or not end_latitude
-            or not end_longitude
+                not start_latitude
+                or not start_longitude
+                or not end_latitude
+                or not end_longitude
         ):
             raise ValueError("Все координаты обязательны для ввода")
 
@@ -51,10 +53,18 @@ async def submit_weather(
         end_wind_speed = end_weather_data["Wind"]["Speed"]["Metric"]["Value"]
         end_precipitation = end_weather_data["HasPrecipitation"]
         end_rain_probability = 80 if end_precipitation else 20
-
+        init_dash_app(
+            app,
+            start_temperature,
+            start_wind_speed,
+            start_rain_probability,
+            end_temperature,
+            end_wind_speed,
+            end_rain_probability,
+        )
         # Проверяем условия для начальной и конечной точки
         if check_bad_weather(
-            start_temperature, start_wind_speed, start_rain_probability
+                start_temperature, start_wind_speed, start_rain_probability
         ) or check_bad_weather(end_temperature, end_wind_speed, end_rain_probability):
             result = "Ой-ой, погода плохая!"
         else:
