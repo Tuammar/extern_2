@@ -5,7 +5,11 @@ from app.core.weather import get_location_key, get_current_weather, check_bad_we
 from app.routers.dash_app import init_dash_app
 from app import app
 
-"""Здесь лежит рутер для задания 3. Пользователь вводит координаты начальной и конечной точки маршрута и получает ответ"""
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -19,56 +23,56 @@ async def index(request: Request):
 
 @form_router.post("/", response_class=HTMLResponse)
 async def submit_weather(
-        request: Request,
-        start_latitude: str = Form(...),
-        start_longitude: str = Form(...),
-        end_latitude: str = Form(...),
-        end_longitude: str = Form(...),
+    request: Request,
+    start_latitude: str = Form(...),
+    start_longitude: str = Form(...),
+    end_latitude: str = Form(...),
+    end_longitude: str = Form(...),
+    waypoint_latitude: list[str] = Form([]),
+    waypoint_longitude: list[str] = Form([]),
 ):
+    form_data = await request.form()
+    waypoint_latitudes = []
+    waypoint_longitudes = []
+
+    # Ищем все ключи, начинающиеся с waypoint_latitude_ и waypoint_longitude_
+    for key, value in form_data.items():
+        if key.startswith("waypoint_latitude_"):
+            waypoint_latitudes.append(value)
+        elif key.startswith("waypoint_longitude_"):
+            waypoint_longitudes.append(value)
     try:
-        if (
-                not start_latitude
-                or not start_longitude
-                or not end_latitude
-                or not end_longitude
-        ):
-            raise ValueError("Все координаты обязательны для ввода")
+        coordinates = [(start_latitude, start_longitude)]
+        coordinates.extend(zip(waypoint_latitudes, waypoint_longitudes))
+        coordinates.append((end_latitude, end_longitude))
+        # logging.info(coordinates)
+        weather_data = []
+        for lat, lon in coordinates:
+            location_key = get_location_key(lat, lon)
+            weather_info = get_current_weather(location_key)[0]
 
-        # Получаем погоду для начальной точки
-        start_location_key = get_location_key(start_latitude, start_longitude)
-        start_weather_data = get_current_weather(start_location_key)[0]
+            temperature = weather_info["Temperature"]["Metric"]["Value"]
+            wind_speed = weather_info["Wind"]["Speed"]["Metric"]["Value"]
+            precipitation = weather_info["HasPrecipitation"]
+            rain_probability = 80 if precipitation else 20
 
-        # Получаем погоду для конечной точки
-        end_location_key = get_location_key(end_latitude, end_longitude)
-        end_weather_data = get_current_weather(end_location_key)[0]
+            weather_data.append(
+                {
+                    "temperature": temperature,
+                    "wind_speed": wind_speed,
+                    "rain_probability": rain_probability,
+                }
+            )
+        logging.info(weather_data)
+        init_dash_app(app, weather_data)
 
-        # Обрабатываем данные для начальной точки
-        start_temperature = start_weather_data["Temperature"]["Metric"]["Value"]
-        start_wind_speed = start_weather_data["Wind"]["Speed"]["Metric"]["Value"]
-        start_precipitation = start_weather_data["HasPrecipitation"]
-        start_rain_probability = 80 if start_precipitation else 20
-
-        # Обрабатываем данные для конечной точки
-        end_temperature = end_weather_data["Temperature"]["Metric"]["Value"]
-        end_wind_speed = end_weather_data["Wind"]["Speed"]["Metric"]["Value"]
-        end_precipitation = end_weather_data["HasPrecipitation"]
-        end_rain_probability = 80 if end_precipitation else 20
-        init_dash_app(
-            app,
-            start_temperature,
-            start_wind_speed,
-            start_rain_probability,
-            end_temperature,
-            end_wind_speed,
-            end_rain_probability,
+        bad_weather_found = any(
+            check_bad_weather(
+                point["temperature"], point["wind_speed"], point["rain_probability"]
+            )
+            for point in weather_data
         )
-        # Проверяем условия для начальной и конечной точки
-        if check_bad_weather(
-                start_temperature, start_wind_speed, start_rain_probability
-        ) or check_bad_weather(end_temperature, end_wind_speed, end_rain_probability):
-            result = "Ой-ой, погода плохая!"
-        else:
-            result = "Погода супер!"
+        result = "Ой-ой, погода плохая!" if bad_weather_found else "Погода супер!"
 
         return templates.TemplateResponse(
             "form.html", {"request": request, "result": result}

@@ -15,7 +15,6 @@
             align-items: center;
             height: 100vh;
         }
-
         .container {
             background-color: white;
             padding: 20px;
@@ -25,20 +24,18 @@
             max-width: 400px;
             text-align: center;
         }
-
         h1 {
             font-size: 24px;
             color: #333;
+            margin-bottom: 20px;
         }
-
         label {
             display: block;
-            margin: 15px 0 5px;
+            margin: 10px 0 5px;
             font-weight: bold;
             color: #555;
         }
-
-        input[type="text"] {
+        input[type="text"], select {
             width: calc(100% - 20px);
             padding: 10px;
             margin-bottom: 15px;
@@ -46,8 +43,7 @@
             border-radius: 5px;
             font-size: 16px;
         }
-
-        input[type="submit"], .btn {
+        button, input[type="submit"] {
             background-color: #4CAF50;
             color: white;
             padding: 10px 20px;
@@ -58,66 +54,68 @@
             transition: background-color 0.3s ease;
             margin-top: 10px;
         }
-
-        input[type="submit"]:hover, .btn:hover {
+        button:hover, input[type="submit"]:hover {
             background-color: #45a049;
         }
-
-        .result {
-            margin-top: 20px;
-            font-size: 18px;
-            color: #333;
-        }
-
-        .result h2 {
-            font-size: 20px;
-            color: #333;
-        }
-
-        .result p {
-            font-size: 16px;
-            color: #555;
+        .waypoint {
+            margin-top: 10px;
         }
     </style>
     <script>
-        function openDashPage(event) {
+        function openDashPage() {
             window.open(`/dash`, '_blank');
         }
 
-        function showGraphButton() {
-            const graphButton = document.getElementById("graph-button");
-            graphButton.style.display = "inline-block"; // Показываем кнопку "Смотреть графики"
+        function addWaypoint() {
+            const container = document.getElementById('waypoints-container');
+            const waypointDiv = document.createElement('div');
+            waypointDiv.className = "waypoint";
+            const waypointIndex = container.childElementCount + 1;
+            waypointDiv.innerHTML = `
+                <label>Промежуточная точка ${waypointIndex} (широта и долгота):</label>
+                <input type="text" name="waypoint_latitude_${waypointIndex}" placeholder="Широта" required>
+                <input type="text" name="waypoint_longitude_${waypointIndex}" placeholder="Долгота" required>
+            `;
+            container.appendChild(waypointDiv);
         }
     </script>
 </head>
 <body>
-<div class="container">
-    <h1>Оценка неблагоприятных погодных условий</h1>
-    <form action="/" method="post" onsubmit="showGraphButton()">
-        <label for="start_latitude">Начальная широта:</label>
-        <input type="text" id="start_latitude" name="start_latitude" placeholder="Введите начальную широту" required>
+    <div class="container">
+        <h1>Оценка неблагоприятных погодных условий</h1>
+        <form action="/" method="post">
+            <label for="start_latitude">Начальная широта:</label>
+            <input type="text" id="start_latitude" name="start_latitude" placeholder="Введите начальную широту" required>
 
-        <label for="start_longitude">Начальная долгота:</label>
-        <input type="text" id="start_longitude" name="start_longitude" placeholder="Введите начальную долготу" required>
+            <label for="start_longitude">Начальная долгота:</label>
+            <input type="text" id="start_longitude" name="start_longitude" placeholder="Введите начальную долготу" required>
 
-        <label for="end_latitude">Конечная широта:</label>
-        <input type="text" id="end_latitude" name="end_latitude" placeholder="Введите конечную широту" required>
+            <div id="waypoints-container"></div>
+            <button type="button" onclick="addWaypoint()">Добавить промежуточную точку</button>
 
-        <label for="end_longitude">Конечная долгота:</label>
-        <input type="text" id="end_longitude" name="end_longitude" placeholder="Введите конечную долготу" required>
+            <label for="end_latitude">Конечная широта:</label>
+            <input type="text" id="end_latitude" name="end_latitude" placeholder="Введите конечную широту" required>
 
-        <input type="submit" value="Проверить погоду">
-    </form>
+            <label for="end_longitude">Конечная долгота:</label>
+            <input type="text" id="end_longitude" name="end_longitude" placeholder="Введите конечную долготу" required>
 
-    {% if result %}
+            <label for="interval">Выберите интервал прогноза:</label>
+            <select id="interval" name="interval">
+                <option value="3">3 дня</option>
+                <option value="7">Неделя</option>
+            </select>
+
+            <input type="submit" value="Проверить погоду">
+        </form>
+
+        {% if result %}
         <div class="result">
             <h2>Результат:</h2>
             <p>{{ result }}</p>
 
-            <!-- Кнопка "Смотреть графики", отображается только если есть результат -->
             <button id="graph-button" class="btn" onclick="openDashPage()">Смотреть графики</button>
         </div>
-    {% endif %}
-</div>
+        {% endif %}
+    </div>
 </body>
 </html>

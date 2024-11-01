@@ -1,18 +1,10 @@
 import plotly.graph_objs as go
-from dash import Dash, dcc, html, dash
+from dash import Dash, dcc, html, Input, Output
 from fastapi import FastAPI
 from starlette.middleware.wsgi import WSGIMiddleware
 
 
-# Функция для создания Dash-приложения
-def create_dash_app(
-    start_temperature,
-    start_wind_speed,
-    start_rain_probability,
-    end_temperature,
-    end_wind_speed,
-    end_rain_probability,
-):
+def create_dash_app(weather_data):
     dash_app = Dash(__name__, requests_pathname_prefix="/dash/")
 
     dash_app.layout = html.Div(
@@ -32,21 +24,19 @@ def create_dash_app(
         ]
     )
 
-    @dash_app.callback(
-        dash.Output("weather_graph", "figure"), [dash.Input("parameter", "value")]
-    )
+    @dash_app.callback(Output("weather_graph", "figure"), [Input("parameter", "value")])
     def update_graph(selected_param):
-        # Пример данных, загруженных заранее. Это нужно заменить реальными данными.
-        data = {
-            "temperature": [start_temperature, end_temperature],
-            "wind_speed": [start_wind_speed, end_wind_speed],
-            "precipitation": [start_rain_probability, end_rain_probability],
+        # Создаем списки значений для выбранного параметра и названий точек маршрута
+        param_data = {
+            "temperature": [point["temperature"] for point in weather_data],
+            "wind_speed": [point["wind_speed"] for point in weather_data],
+            "precipitation": [point["rain_probability"] for point in weather_data],
         }
-        x_values = ["В точке отправления", "В точке назначения"]
+        x_values = [f"Точка {i + 1}" for i in range(len(weather_data))]
 
         fig = go.Figure()
         fig.add_trace(
-            go.Scatter(x=x_values, y=data[selected_param], mode="lines+markers")
+            go.Scatter(x=x_values, y=param_data[selected_param], mode="lines+markers")
         )
         fig.update_layout(title=f"График {selected_param}")
 
@@ -56,21 +46,6 @@ def create_dash_app(
 
 
 # Интеграция с FastAPI
-def init_dash_app(
-    fastapi_app: FastAPI,
-    start_temperature,
-    start_wind_speed,
-    start_precipitation,
-    end_temperature,
-    end_wind_speed,
-    end_precipitation,
-):
-    dash_app = create_dash_app(
-        start_temperature,
-        start_wind_speed,
-        start_precipitation,
-        end_temperature,
-        end_wind_speed,
-        end_precipitation,
-    )
+def init_dash_app(fastapi_app: FastAPI, weather_data):
+    dash_app = create_dash_app(weather_data)
     fastapi_app.mount("/dash", WSGIMiddleware(dash_app.server))
