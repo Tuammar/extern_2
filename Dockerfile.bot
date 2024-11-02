@@ -1,0 +1,17 @@
+# Используем Python базовый образ
+FROM python:3.12
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Копируем файлы с зависимостями
+COPY pyproject.toml poetry.lock /app/
+
+# Устанавливаем Poetry и зависимости
+RUN pip install poetry && poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
+
+# Копируем весь код в контейнер
+COPY . /app
+
+# Указываем команду для запуска бота
+CMD ["poetry", "run", "python", "app/bot.py"]
